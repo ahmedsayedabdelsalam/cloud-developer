@@ -1,5 +1,8 @@
 import fs from "fs";
 import Jimp = require("jimp");
+import { URL } from "url";
+import path from 'path'
+import axios from "axios";
 
 // filterImageFromURL
 // helper function to download, filter, and save the filtered image locally
@@ -11,7 +14,13 @@ import Jimp = require("jimp");
 export async function filterImageFromURL(inputURL: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
-      const photo = await Jimp.read(inputURL);
+      // using axios cuz the image sample given is not working cus of missing mime type
+      const imageBuffer = await axios({
+        method: 'get',
+        url: inputURL,
+        responseType: 'arraybuffer'
+      })
+      const photo = await Jimp.read(imageBuffer.data);
       const outpath =
         "/tmp/filtered." + Math.floor(Math.random() * 2000) + ".jpg";
       await photo
@@ -36,4 +45,29 @@ export async function deleteLocalFiles(files: Array<string>) {
   for (let file of files) {
     fs.unlinkSync(file);
   }
+}
+
+// validateUrl
+// helper function to check if the passed url string is valid
+// INPUTS
+//    url: string the url string we want to validate
+// RETURNS
+//    true if the url is valid, false if not
+export function validateUrl(url: string) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// readTempDir
+// helper function to read files in temp directory
+// RETURNS
+//    array of files full paths in the temp directory
+export function readTempDir(): Array<string> {
+  const temDirPath = __dirname + '/tmp';
+
+  return fs.readdirSync(temDirPath).map(file => path.resolve(temDirPath, file))
 }
