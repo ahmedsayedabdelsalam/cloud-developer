@@ -29,7 +29,7 @@ import {filterImageFromURL, deleteLocalFiles, readTempDir, validateUrl} from './
 
   /**************************************************************************** */
   app.get("/filteredimage",async (req: Request, res: Response) => {
-    const imageUrl: string = req.query.image_url;
+    const imageUrl: string = req.query.image_url as string;
 
     if (! imageUrl) {
       return res.status(422).json({code: 422, message: 'image_url: query parameter is missing or empty'});
