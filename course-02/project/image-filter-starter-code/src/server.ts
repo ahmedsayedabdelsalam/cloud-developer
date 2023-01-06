@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {filterImageFromURL, deleteLocalFiles, readTempDir, validateUrl} from './util/util';
 
 (async () => {
 
@@ -28,12 +28,26 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
+  app.get("/filteredimage",async (req: Request, res: Response) => {
+    const imageUrl: string = req.query.image_url as string;
 
+    if (! imageUrl) {
+      return res.status(422).json({code: 422, message: 'image_url: query parameter is missing or empty'});
+    }
+
+    if (! validateUrl(imageUrl)) {
+      return res.status(422).json({code: 422, message: 'image_url: is not a valid url'});
+    }
+
+    const imagePath = await filterImageFromURL(imageUrl);
+
+    return res.sendFile(imagePath, () => deleteLocalFiles(readTempDir()));
+  })
   //! END @TODO1
   
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
+  app.get( "/", async (req: Request, res: Response) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
   
